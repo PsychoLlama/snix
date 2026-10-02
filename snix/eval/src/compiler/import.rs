@@ -27,8 +27,14 @@ async fn import_impl(
     // TODO(sterni): canon_path()?
     let mut path = try_cek_to_value!(coerce_value_to_path(&co, args.pop().unwrap()).await?);
 
-    if path.is_dir() {
-        path.push("default.nix");
+    // Ask the I/O handle rather than `std::fs`, which may not be the
+    // filesystem being evaluated (e.g. on wasm).
+    let default_nix = path.join("default.nix");
+    if generators::request_path_exists(&co, default_nix.clone())
+        .await
+        .as_bool()?
+    {
+        path = default_nix;
     }
 
     if let Some(cached) = generators::request_import_cache_lookup(&co, path.clone()).await {

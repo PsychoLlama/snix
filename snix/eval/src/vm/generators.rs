@@ -757,7 +757,6 @@ pub async fn request_open_file(co: &GenCo, path: PathBuf) -> Box<dyn std::io::Re
     }
 }
 
-#[cfg_attr(not(feature = "impure"), allow(unused))]
 pub(crate) async fn request_path_exists(co: &GenCo, path: PathBuf) -> Value {
     match co.yield_(VMRequest::PathExists(path)).await {
         VMResponse::Value(value) => value,
