@@ -7,7 +7,7 @@
 
 use super::GlobalsMap;
 use genawaiter::rc::Gen;
-use std::rc::Weak;
+use std::{path::Path, rc::Weak};
 
 use crate::{
     ErrorKind, SourceCode, Value,
@@ -61,7 +61,10 @@ async fn import_impl(
 
     let result = crate::compiler::compile(
         &parsed.tree().expr().unwrap(),
-        Some(path.clone()),
+        // Relative paths resolve against the file's directory. Passing it
+        // directly spares the compiler from asking `std::fs` whether the
+        // location is a file, which bypasses the configured `EvalIO`.
+        path.parent().map(Path::to_path_buf),
         // The VM must ensure that a strong reference to the globals outlives
         // any self-references (which are weak) embedded within the globals. If
         // the expect() below panics, it means that did not happen.

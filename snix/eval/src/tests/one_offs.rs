@@ -119,7 +119,25 @@ fn evaluate_in_memory(code: &str, files: &[(&str, &'static str)]) -> EvaluationR
 fn import_directory_through_io_handle() {
     let result = evaluate_in_memory(
         "import /snix-test/lib",
-        &[("/snix-test/lib/default.nix", "42")],
+        &[
+            ("/snix-test/lib/default.nix", "import ./value.nix"),
+            ("/snix-test/lib/value.nix", "42"),
+        ],
+    );
+
+    assert!(result.errors.is_empty(), "{:?}", result.errors);
+    assert_matches!(result.value, Some(Value::Integer(42)));
+}
+
+#[test]
+fn import_relative_to_imported_file() {
+    let result = evaluate_in_memory(
+        "import /snix-test/src/main.nix",
+        &[
+            ("/snix-test/src/main.nix", "import ./util.nix"),
+            ("/snix-test/src/util.nix", "import ../top.nix"),
+            ("/snix-test/top.nix", "42"),
+        ],
     );
 
     assert!(result.errors.is_empty(), "{:?}", result.errors);
