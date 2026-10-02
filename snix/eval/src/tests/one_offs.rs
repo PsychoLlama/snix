@@ -143,3 +143,14 @@ fn import_relative_to_imported_file() {
     assert!(result.errors.is_empty(), "{:?}", result.errors);
     assert_matches!(result.value, Some(Value::Integer(42)));
 }
+
+#[test]
+fn cur_pos_in_file_outside_real_filesystem() {
+    let result = evaluate_in_memory(
+        "(import /snix-test/pos.nix).file",
+        &[("/snix-test/pos.nix", "__curPos")],
+    );
+
+    assert!(result.errors.is_empty(), "{:?}", result.errors);
+    assert_matches!(result.value, Some(Value::String(s)) if s == "/snix-test/pos.nix");
+}

@@ -1475,8 +1475,10 @@ impl Compiler<'_, '_> {
             _ => {
                 let span = self.span_for(node);
                 let pos = self.file.find_line_col(span.low());
+                // canonicalize fails when the file isn't on the real
+                // filesystem (e.g. an in-memory `EvalIO`, or on wasm).
                 let abs_path = std::fs::canonicalize(self.file.name())
-                    .unwrap()
+                    .unwrap_or_else(|_| PathBuf::from(self.file.name()))
                     .to_string_lossy()
                     .to_string();
                 let attrs = NixAttrs::from_iter([
