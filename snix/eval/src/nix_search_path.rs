@@ -44,7 +44,13 @@ enum NixSearchPathEntry {
 }
 
 fn canonicalise(path: PathBuf) -> Result<PathBuf, ErrorKind> {
-    let absolute = if path.is_absolute() {
+    // `is_absolute()` always returns `false` on wasm targets.
+    let root_relative = cfg_select! {
+        target_arch = "wasm32" => path.has_root(),
+        _ => path.is_absolute(),
+    };
+
+    let absolute = if root_relative {
         path
     } else {
         // TODO(tazjin): probably panics in wasm?
