@@ -74,7 +74,14 @@ pub async fn coerce_value_to_path(
     );
 
     let path = vs.to_path()?.to_owned();
-    if path.is_absolute() {
+
+    // `is_absolute()` always returns `false` on wasm targets.
+    let absolute = cfg_select! {
+        target_arch = "wasm32" => path.has_root(),
+        _ => path.is_absolute(),
+    };
+
+    if absolute {
         Ok(Ok(path))
     } else {
         Err(ErrorKind::NotAnAbsolutePath(path))
